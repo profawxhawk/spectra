@@ -61,6 +61,13 @@ func matchFilter(span *model.Span, f model.Filter) bool {
 				}
 			}
 		}
+		if csv, ok := f.Value.(string); ok {
+			for _, v := range strings.Split(csv, ",") {
+				if strings.TrimSpace(v) == strVal {
+					return true
+				}
+			}
+		}
 		return false
 	default:
 		return false

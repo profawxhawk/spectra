@@ -143,6 +143,28 @@ func (p *Planner) Execute(ctx context.Context, plan *Plan) (*model.QueryResult, 
 				}
 			}
 		}
+
+		// Third: scan WAL files (data not yet compacted into segments)
+		if p.walReader != nil {
+			walFiles, err := p.walReader.ListAllWALFiles(ctx)
+			if err == nil {
+				for _, wf := range walFiles {
+					entries, err := p.walReader.ReadFile(ctx, wf)
+					if err != nil {
+						continue
+					}
+					for _, e := range entries {
+						var span model.Span
+						if err := decodeMsgpack(e.Payload, &span); err == nil {
+							if !seen[span.SpanID] && matchesAllFilters(&span, plan.Query.Filters) && matchesSearch(&span, plan.Query.Search) {
+								seen[span.SpanID] = true
+								allSpans = append(allSpans, span)
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	// Sort
