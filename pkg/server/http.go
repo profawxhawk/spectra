@@ -47,7 +47,7 @@ func NewHTTPServer(addr string, walWriter *wal.Writer, memIdx *memindex.MemIndex
 
 	s.server = &http.Server{
 		Addr:         addr,
-		Handler:      mux,
+		Handler:      corsMiddleware(mux),
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  120 * time.Second,
@@ -68,6 +68,19 @@ func (s *HTTPServer) Start() error {
 // Stop gracefully shuts down the HTTP server.
 func (s *HTTPServer) Stop(ctx context.Context) error {
 	return s.server.Shutdown(ctx)
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (s *HTTPServer) handleHealth(w http.ResponseWriter, r *http.Request) {
