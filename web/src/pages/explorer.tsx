@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { Shell } from '@/components/layout/shell'
 import { SpanTable } from '@/components/explorer/span-table'
 import { FilterSidebar } from '@/components/explorer/filter-sidebar'
+import { FilterBuilder } from '@/components/explorer/filter-builder'
 import { SpanDetailPanel } from '@/components/explorer/span-detail-panel'
 import { QueryBar } from '@/components/shared/query-bar'
 import { TimeRangePicker } from '@/components/shared/time-range-picker'
@@ -18,23 +19,25 @@ export default function ExplorerPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedKinds, setSelectedKinds] = useState<Set<SpanKind>>(new Set())
   const [selectedStatuses, setSelectedStatuses] = useState<Set<SpanStatus>>(new Set())
+  const [builderFilters, setBuilderFilters] = useState<Filter[]>([])
   const [selectedSpan, setSelectedSpan] = useState<Span | null>(null)
   const [page, setPage] = useState(0)
 
-  const filters: Filter[] = []
+  // Merge sidebar quick-toggles + builder filters
+  const allFilters: Filter[] = [...builderFilters]
   if (selectedKinds.size > 0) {
-    filters.push({ field: 'kind', operator: 'in', value: Array.from(selectedKinds).join(',') })
+    allFilters.push({ field: 'kind', operator: 'in', value: Array.from(selectedKinds).join(',') })
   }
   if (selectedStatuses.size > 0) {
-    filters.push({ field: 'status', operator: 'in', value: Array.from(selectedStatuses).join(',') })
+    allFilters.push({ field: 'status', operator: 'in', value: Array.from(selectedStatuses).join(',') })
   }
 
   const hasSearch = searchQuery.length > 0
-  const hasFilters = filters.length > 0
+  const hasFilters = allFilters.length > 0
 
   const spanQuery = useSpans(
     {
-      filters: hasFilters ? filters : [{ field: 'kind', operator: 'in', value: 'llm,tool,agent,retriever,chain,generic' }],
+      filters: hasFilters ? allFilters : [{ field: 'kind', operator: 'in', value: 'llm,tool,agent,retriever,chain,generic' }],
       order_by: 'start_time',
       ascending: false,
       limit: PAGE_SIZE,
@@ -70,9 +73,14 @@ export default function ExplorerPage() {
     setPage(0)
   }, [])
 
-  const clearFilters = useCallback(() => {
+  const clearSidebar = useCallback(() => {
     setSelectedKinds(new Set())
     setSelectedStatuses(new Set())
+    setPage(0)
+  }, [])
+
+  const handleBuilderApply = useCallback((filters: Filter[]) => {
+    setBuilderFilters(filters)
     setPage(0)
   }, [])
 
@@ -89,13 +97,15 @@ export default function ExplorerPage() {
           <TimeRangePicker value={timeRange} onChange={setTimeRange} />
         </div>
 
+        <FilterBuilder onApply={handleBuilderApply} activeCount={allFilters.length} />
+
         <div className="flex flex-1 gap-4 overflow-hidden">
           <FilterSidebar
             selectedKinds={selectedKinds}
             selectedStatuses={selectedStatuses}
             onToggleKind={toggleKind}
             onToggleStatus={toggleStatus}
-            onClear={clearFilters}
+            onClear={clearSidebar}
           />
 
           <div className="flex-1 overflow-auto rounded-md border border-border">
