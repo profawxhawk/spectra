@@ -1,4 +1,4 @@
-.PHONY: build test lint clean run dev proto docker
+.PHONY: build test lint clean run dev seed proto docker
 
 build:
 	go build -o bin/spectra ./cmd/spectra
@@ -23,3 +23,6 @@ docker:
 
 dev:
 	./start.sh
+
+seed:
+	./seed.sh
