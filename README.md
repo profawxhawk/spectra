@@ -147,11 +147,45 @@ make build         # compile binary
 make lint          # golangci-lint
 ```
 
+## Web UI
+
+Spectra includes a built-in web interface for exploring traces, searching spans, and monitoring system health.
+
+### Start the Frontend
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+The UI is available at [http://localhost:5173](http://localhost:5173) and proxies API requests to the backend on `:8080`.
+
+### Features
+
+- **Dashboard** — Stats cards, span volume chart, error rates, latency percentiles (P50/P90/P95/P99), and span kind breakdown
+- **Explorer** — Sortable data table with faceted filtering by kind and status, full-text search, pagination, and span detail panel
+- **Trace Detail** — Waterfall timeline and span tree with parent-child hierarchy, token counts, and input/output viewer
+- **Live Tail** — Real-time span streaming with pause/resume, filtering, and 500-span rolling buffer
+- **Search** — Full-text search across span inputs, outputs, and names with result cards
+
+### Tech Stack
+
+React, TypeScript, Vite, TailwindCSS, shadcn/ui, TanStack Query, Recharts, React Router
+
 ## Project Structure
 
 ```
 spectra/
 ├── cmd/spectra/main.go          # CLI entrypoint (cobra)
+├── web/                         # React frontend (Vite + TypeScript)
+│   ├── src/
+│   │   ├── components/          # UI components (dashboard, explorer, trace, live)
+│   │   ├── hooks/               # React Query data hooks
+│   │   ├── pages/               # Route pages
+│   │   ├── lib/                 # API client, utilities
+│   │   └── types/               # TypeScript type definitions
+│   └── package.json
 ├── pkg/
 │   ├── config/                  # YAML configuration
 │   ├── model/                   # Trace, Span, Query types
