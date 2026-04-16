@@ -8,7 +8,6 @@ import { QueryBar } from '@/components/shared/query-bar'
 import { TimeRangePicker } from '@/components/shared/time-range-picker'
 import { Button } from '@/components/ui/button'
 import { useSpans } from '@/hooks/use-spans'
-import { useSearch } from '@/hooks/use-search'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Span, SpanKind, SpanStatus, TimeRange, Filter } from '@/types'
 
@@ -32,26 +31,20 @@ export default function ExplorerPage() {
     allFilters.push({ field: 'status', operator: 'in', value: Array.from(selectedStatuses).join(',') })
   }
 
-  const hasSearch = searchQuery.length > 0
   const hasFilters = allFilters.length > 0
 
-  const spanQuery = useSpans(
-    {
-      filters: hasFilters ? allFilters : [{ field: 'kind', operator: 'in', value: 'llm,tool,agent,retriever,chain,generic' }],
-      order_by: 'start_time',
-      ascending: false,
-      limit: PAGE_SIZE,
-      offset: page * PAGE_SIZE,
-    },
-    !hasSearch
-  )
+  const { data, isLoading } = useSpans({
+    filters: hasFilters ? allFilters : [{ field: 'kind', operator: 'in', value: 'llm,tool,agent,retriever,chain,generic' }],
+    search: searchQuery || undefined,
+    order_by: 'start_time',
+    ascending: false,
+    limit: PAGE_SIZE,
+    offset: page * PAGE_SIZE,
+  })
 
-  const searchResult = useSearch(searchQuery, PAGE_SIZE, hasSearch)
-
-  const result = hasSearch ? searchResult : spanQuery
-  const spans = result.data?.spans || []
-  const totalCount = result.data?.total_count || 0
-  const hasMore = result.data?.has_more || false
+  const spans = data?.spans || []
+  const totalCount = data?.total_count || 0
+  const hasMore = data?.has_more || false
 
   const toggleKind = useCallback((kind: SpanKind) => {
     setSelectedKinds((prev) => {
@@ -109,7 +102,7 @@ export default function ExplorerPage() {
           />
 
           <div className="flex-1 overflow-auto rounded-md border border-border">
-            {result.isLoading ? (
+            {isLoading ? (
               <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">Loading...</div>
             ) : (
               <SpanTable

@@ -1,17 +1,15 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
-  Search,
   List,
-  Activity,
   Radio,
+  Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const links = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/explorer', label: 'Explorer', icon: List },
-  { to: '/search', label: 'Search', icon: Search },
   { to: '/live', label: 'Live Tail', icon: Radio },
 ]
 
