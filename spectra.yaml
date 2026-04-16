@@ -1,13 +1,13 @@
 node:
   roles: [ingest, compact, index, query]
-  http_addr: ":8080"
+  http_addr: ":8090"
 
 storage:
   backend: "fs"
   base_path: "/tmp/spectra/data"
 
 meta:
-  dsn: "postgres://spectra:spectra@localhost:5432/spectra?sslmode=disable"
+  dsn: "postgres://spectra:spectra@localhost:5433/spectra?sslmode=disable"
 
 redis:
   addr: "localhost:6379"

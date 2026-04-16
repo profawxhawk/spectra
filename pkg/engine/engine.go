@@ -99,12 +99,12 @@ func (e *Engine) Start(ctx context.Context) error {
 		e.logger.Info("ingest role started")
 	}
 
-	if e.hasRole("compact") {
+	if e.hasRole("compact") && e.metaStore != nil {
 		go e.compactor.Start(ctx)
 		e.logger.Info("compact role started")
 	}
 
-	if e.hasRole("index") {
+	if e.hasRole("index") && e.metaStore != nil {
 		go e.indexer.Start(ctx)
 		e.logger.Info("index role started")
 	}
