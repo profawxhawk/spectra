@@ -37,6 +37,9 @@ command -v go   >/dev/null 2>&1 || { echo -e "${RED}Error: Go is not installed${
 command -v node >/dev/null 2>&1 || { echo -e "${RED}Error: Node.js is not installed${NC}"; exit 1; }
 command -v docker >/dev/null 2>&1 || { echo -e "${RED}Error: Docker is not installed${NC}"; exit 1; }
 
+# Ensure GOPATH/bin is in PATH
+export PATH="$(go env GOPATH)/bin:$PATH"
+
 # Install air if not present
 if ! command -v air >/dev/null 2>&1; then
   echo "  Installing air (Go live-reload)..."

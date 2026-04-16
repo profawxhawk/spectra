@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-  bin = "./tmp/spectra"
+  full_bin = "./tmp/spectra serve --config spectra.yaml"
   cmd = "go build -o ./tmp/spectra ./cmd/spectra"
   delay = 1000
   exclude_dir = ["tmp", "bin", "web", "node_modules", "vendor", ".git"]
@@ -11,9 +11,6 @@ tmp_dir = "tmp"
   kill_delay = "1s"
   send_interrupt = true
   stop_on_error = true
-
-[build.args_bin]
-  serve = "--config spectra.yaml"
 
 [log]
   main_only = true
