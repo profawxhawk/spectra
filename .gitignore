@@ -27,6 +27,9 @@ Thumbs.db
 /tmp/
 *.log
 
+# Air (Go hot-reload)
+tmp/
+
 # Frontend
 web/node_modules/
 web/dist/

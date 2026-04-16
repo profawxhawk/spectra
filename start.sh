@@ -37,9 +37,15 @@ command -v go   >/dev/null 2>&1 || { echo -e "${RED}Error: Go is not installed${
 command -v node >/dev/null 2>&1 || { echo -e "${RED}Error: Node.js is not installed${NC}"; exit 1; }
 command -v docker >/dev/null 2>&1 || { echo -e "${RED}Error: Docker is not installed${NC}"; exit 1; }
 
+# Install air if not present
+if ! command -v air >/dev/null 2>&1; then
+  echo "  Installing air (Go live-reload)..."
+  go install github.com/air-verse/air@latest
+fi
+
 echo "  go     $(go version | awk '{print $3}')"
 echo "  node   $(node -v)"
-echo "  docker $(docker --version | awk '{print $3}' | tr -d ',')"
+echo "  air    $(air -v 2>&1 | head -1 || echo 'installed')"
 
 # ── 2. Start infrastructure (only what's missing) ───────────────────
 echo -e "${CYAN}[2/5] Starting infrastructure...${NC}"
@@ -76,14 +82,8 @@ else
   echo -e "  Redis     :$REDIS_PORT ${GREEN}started${NC}"
 fi
 
-# ── 3. Build backend ────────────────────────────────────────────────
-echo -e "${CYAN}[3/5] Building Go backend...${NC}"
-
-go build -o bin/spectra ./cmd/spectra
-echo "  Built bin/spectra"
-
-# ── 4. Start backend ────────────────────────────────────────────────
-echo -e "${CYAN}[4/5] Starting backend on :${HTTP_PORT}...${NC}"
+# ── 3. Start backend with air (hot-reload) ──────────────────────────
+echo -e "${CYAN}[3/5] Starting backend on :${HTTP_PORT} with hot-reload...${NC}"
 
 if port_open "$HTTP_PORT"; then
   echo -e "  ${RED}Port $HTTP_PORT already in use. Change http_addr in spectra.yaml${NC}"
@@ -91,12 +91,12 @@ if port_open "$HTTP_PORT"; then
 fi
 
 mkdir -p /tmp/spectra/data /tmp/spectra/index
-./bin/spectra serve --config spectra.yaml &
+air &
 BACKEND_PID=$!
 
 for i in $(seq 1 30); do
   if curl -sf http://localhost:${HTTP_PORT}/healthz >/dev/null 2>&1; then
-    echo -e "  Backend   :${HTTP_PORT} ${GREEN}ready${NC}"
+    echo -e "  Backend   :${HTTP_PORT} ${GREEN}ready${NC} (watching .go and .yaml files)"
     break
   fi
   if [ "$i" -eq 30 ]; then
@@ -106,8 +106,8 @@ for i in $(seq 1 30); do
   sleep 1
 done
 
-# ── 5. Start frontend ───────────────────────────────────────────────
-echo -e "${CYAN}[5/5] Starting frontend on :5173...${NC}"
+# ── 4. Start frontend with Vite HMR ─────────────────────────────────
+echo -e "${CYAN}[4/5] Starting frontend on :5173 with HMR...${NC}"
 
 cd web
 if [ ! -d node_modules ]; then
@@ -119,21 +119,21 @@ FRONTEND_PID=$!
 cd "$ROOT"
 
 sleep 2
-echo -e "  Frontend  :5173 ${GREEN}ready${NC}"
+echo -e "  Frontend  :5173 ${GREEN}ready${NC} (watching .tsx, .ts, .css files)"
 
 # ── Ready ────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}  Spectra is running!${NC}"
+echo -e "${GREEN}  Spectra is running!  (with hot-reload)${NC}"
 echo ""
-echo -e "  Frontend:  ${CYAN}http://localhost:5173${NC}"
-echo -e "  Backend:   ${CYAN}http://localhost:${HTTP_PORT}${NC}"
+echo -e "  Frontend:  ${CYAN}http://localhost:5173${NC}      ${YELLOW}← Vite HMR${NC}"
+echo -e "  Backend:   ${CYAN}http://localhost:${HTTP_PORT}${NC}      ${YELLOW}← air (auto-rebuild)${NC}"
 echo -e "  Health:    ${CYAN}http://localhost:${HTTP_PORT}/healthz${NC}"
 echo ""
-echo -e "  ${YELLOW}Ingest sample data:${NC}"
-echo "  curl -X POST http://localhost:${HTTP_PORT}/v1/spans \\"
-echo '    -H "Content-Type: application/json" \'
-echo '    -d '"'"'{"spans":[{"span_id":"s1","trace_id":"t1","name":"gpt4_call","kind":"llm","start_time":"2024-01-15T10:30:00Z","input":"Hello","output":"Hi there","metrics":{"latency_ms":1500,"prompt_tokens":10,"completion_tokens":20}}]}'"'"''
+echo -e "  ${YELLOW}Ingest sample data:${NC}  make seed"
+echo ""
+echo -e "  Edit Go files  → backend rebuilds automatically"
+echo -e "  Edit TSX files → frontend updates instantly"
 echo ""
 echo -e "  ${YELLOW}Press Ctrl+C to stop${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
