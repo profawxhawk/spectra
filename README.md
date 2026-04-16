@@ -84,15 +84,27 @@ graph LR
 ### Run Locally
 
 ```bash
-# Start infrastructure
-docker-compose up -d
+# One command — starts Postgres, Redis, backend, and frontend
+./start.sh
 
-# Build and run
-make build
-./bin/spectra serve
+# Or equivalently:
+make dev
+```
 
-# Or use filesystem-only mode (no Postgres/Redis needed)
-./bin/spectra serve --config spectra.yaml
+This will:
+1. Start Postgres, Redis, and MinIO via Docker Compose
+2. Build and start the Go backend on `:8080`
+3. Start the React frontend on `:5173`
+
+Press `Ctrl+C` to stop everything.
+
+**Manual startup** (if you prefer):
+
+```bash
+docker-compose up -d         # infrastructure
+make build                   # compile
+./bin/spectra serve           # backend on :8080
+cd web && npm install && npm run dev  # frontend on :5173
 ```
 
 ### Ingest Spans

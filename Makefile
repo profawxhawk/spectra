@@ -1,4 +1,4 @@
-.PHONY: build test lint clean run proto docker
+.PHONY: build test lint clean run dev proto docker
 
 build:
 	go build -o bin/spectra ./cmd/spectra
@@ -20,3 +20,6 @@ proto:
 
 docker:
 	docker build -t spectra:latest .
+
+dev:
+	./start.sh

@@ -1,0 +1,26 @@
+node:
+  roles: [ingest, compact, index, query]
+  http_addr: ":8080"
+
+storage:
+  backend: "fs"
+  base_path: "/tmp/spectra/data"
+
+meta:
+  dsn: "postgres://spectra:spectra@localhost:5432/spectra?sslmode=disable"
+
+redis:
+  addr: "localhost:6379"
+
+wal:
+  flush_interval: 1s
+  max_batch_size: 1000
+
+segment:
+  target_size: 52428800
+  max_spans: 100000
+  compact_interval: 5s
+
+index:
+  index_interval: 5s
+  base_path: "/tmp/spectra/index"
